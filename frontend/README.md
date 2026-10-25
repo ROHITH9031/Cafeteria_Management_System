@@ -1,210 +1,125 @@
-# SRKR Cafeteria
+# SRKR Cafeteria — Frontend
 
-SRKR Cafeteria is a smart food ordering and token management frontend for the SRKR Engineering College cafeteria. It is designed to reduce queues at the billing counter and food collection counter by allowing students to browse the menu, place orders, receive a token, and follow preparation progress from their devices.
+SRKR Cafeteria is a modern food ordering, live token tracking, and queue-free pickup web application built for the students, faculty, and cafeteria staff of SRKR Engineering College.
 
-This repository currently contains the frontend prototype. It uses local mock services and browser storage so the complete customer and cafeteria staff experience can be demonstrated before the MERN backend is added.
+Built with **React 19**, **Vite**, **Tailwind CSS v4**, and **Socket.IO**, the application connects seamlessly with the Node.js/Express backend API for real-time order progression, scannable QR tokens, camera bill scanning, and responsive Dark Mode.
 
-## Product Theme
+---
 
-The application follows a warm, modern cafeteria and SaaS dashboard visual language:
+## Key Features
 
-- Orange and amber brand accents inspired by fresh food and energy.
-- Inter for readable interface text and Outfit for headings and important numbers.
-- Rounded cards, clear status badges, soft borders, and restrained shadows.
-- Responsive layouts for phones, tablets, laptops, and desktop screens.
-- Token-first order tracking so customers and staff can identify orders quickly.
+### 1. Real-Time Persistent Connections (WebSockets)
+- Centralized Socket.IO client singleton (`services/socketService.js`) with automatic reconnection and fallback transport.
+- Staff dashboard receives instant `order:created` events when customers check out without manual refresh.
+- Customer order page subscribes to private rooms (`order:<id>`) and receives instant `order:status_updated` push notifications.
+- Visual connectivity indicator badge displaying *Live persistent connection* or fallback mode.
+- Global `menu:updated` listener automatically refreshes the catalog when an admin changes item stock or price.
 
-## Main Experiences
+### 2. Token-to-QR Pickup System (`OrderTokenQR`)
+- On the customer order tracking page (`/orders/:orderId`), the order token is rendered as a scannable, high-contrast QR code generated via `qrcode`.
+- Encodes full order verification data (token, order ID, customer name, total amount) for cafeteria staff verification.
+- Includes **Pickup QR / Token Number** toggle switch and a **Tap to Enlarge** full-screen display mode for effortless counter scanning from any angle.
 
-### Customer experience
+### 3. Admin Order Handover Scanner (`AdminOrderScannerModal`)
+- Staff order management dashboard (`/admin/orders`) features a **"Scan Pickup QR"** camera scanner powered by `html5-qrcode`.
+- Staff points their camera at the student's phone screen to scan their pickup QR code.
+- Instantly matches the order in the live queue and provides a 1-click **"Mark as Completed / Handed Over"** button.
+- Includes simulated active order scanning for testing without hardware cameras.
 
-- Landing page explaining the queue-free ordering flow.
-- Menu browsing with:
-  - Search
-  - Category filters
-  - Price, name, and popularity sorting
-  - Featured and popular item labels
-  - Availability indicators
-- Persistent shopping cart with quantity controls and INR totals.
-- Checkout form for student name, student ID, and optional contact information.
-- Demo pay-at-counter checkout; no real payment details are collected.
-- Unique order token shown after checkout.
-- Order history and order detail pages.
-- Preparation progress tracking across:
-  - Pending
-  - Preparing
-  - Ready
-  - Completed
-  - Delivered
-  - Cancelled
+### 4. Camera Price Scanner upon Order Completion (`PriceCameraScanner`)
+- When an order reaches the `Completed` or `Delivered` state, the customer order page enables a dedicated camera scanner.
+- The student can scan cafeteria counter payment QR codes (UPI `upi://pay?...&am=120`), printed counter bill barcodes, or price tags.
+- Automatically extracts the price amount, checks it against the order's `totalAmount`, and plays an audio verification chime via the Web Audio API.
+- Confirms whether the scanned price matches the billed total or flags discrepancies.
 
-### Admin experience
+### 5. Enhanced Dark Mode
+- Full dark mode system powered by `ThemeContext` and `ThemeToggle`.
+- Persists user preference to `localStorage` and automatically syncs with system OS preferences (`prefers-color-scheme: dark`).
+- Configured via Tailwind CSS v4 class-based variant `@custom-variant dark (&:where(.dark, .dark *));`.
+- Complete dark palette styling across **all** customer pages, admin dashboard, order queue, menu editor, modals, badges, 404 page, and error boundary.
 
-- Frontend-only demo login with a protected admin layout.
-- Dashboard metrics calculated from shared order data:
-  - Total orders
-  - Pending orders
-  - Preparing orders
-  - Ready orders
-  - Completed orders
-  - Delivered orders
-  - Demo revenue
-- Order management with:
-  - Token and customer search
-  - Status filters
-  - Newest/oldest sorting
-  - Order detail modal
-  - Status progression controls
-- Menu management with:
-  - Add and edit item forms
-  - Price, category, image, description, and preparation time editing
-  - Availability toggling
-  - Popular and featured flags
-  - Delete confirmation
-  - Reset-demo-menu action
+### 6. Customer Experience
+- Modern landing page with cafeteria status, 3-step queue-free guide, category browsing, and featured items.
+- Menu catalog with category/search/sort, price range and combined dietary filters, stock-aware availability, and low-stock hints.
+- Checkout verifies contact details and requests current server-side stock and prices before order submission; failed requests keep the cart for retry.
+- Persistent shopping cart with item quantity controls (up to 50 items) and Dine-in / Parcel order type options.
+- Student authentication modal for registration and login, with auto-fill in checkout.
+- Order history and status tracking stepper across `Pending`, `Preparing`, `Ready`, `Completed`, and `Delivered`.
+- Cancellation capability for pending orders.
 
-Admin status updates use the same shared order state as the customer pages, so changes are visible in the customer order tracker.
+### 7. Staff & Admin Operations
+- Secure JWT-authenticated login (`/admin/login`) with role guard redirect.
+- Admin sales reports with date range, all-record revenue/order/item aggregates, daily sales, status counts, and CSV export.
+- Live order queue with server-side search, status/date filters, accurate matching/active counts, pagination, and bulk status updates.
+- Menu management with CRUD operations, stock quantities, dietary tags, and combinable filters with reset.
+
+---
 
 ## Routes
 
-### Customer routes
+### Customer Routes
 
 | Route | Purpose |
 | --- | --- |
-| `/` | Customer landing page |
-| `/menu` | Food menu and item browsing |
-| `/cart` | Cart and checkout |
-| `/orders` | Customer order history |
-| `/orders/:orderId` | Token and status tracking |
+| `/` | Cafeteria landing page with featured items and 3-step guide |
+| `/menu` | Searchable food catalog with category filters & sorting |
+| `/cart` | Cart management, Dine-in/Parcel choice, and checkout |
+| `/orders` | Customer order history with live status badges |
+| `/orders/:orderId` | Live order details, scannable pickup QR, and camera price scanner |
+| `*` | Custom 404 page with navigation shortcuts |
 
-### Admin routes
+### Admin Routes
 
 | Route | Purpose |
 | --- | --- |
-| `/admin/login` | Demo admin sign-in |
-| `/admin` | Admin overview dashboard |
-| `/admin/orders` | Order queue and status management |
-| `/admin/menu` | Menu catalog management |
+| `/admin/login` | Separate secure staff authentication |
+| `/admin` | Real-time operations dashboard, metrics, and revenue charts |
+| `/admin/orders` | Live WebSocket order queue, status progression, and pickup QR scanner |
+| `/admin/menu` | Catalog editor, stock toggles, price updates, and demo reset |
+
+---
 
 ## Technology Stack
 
-- React 19
-- Vite
-- JavaScript and JSX
-- React Router
-- React Context API
-- Lucide React icons
-- Tailwind CSS v4 through the Vite plugin
-- LocalStorage for frontend persistence
+- **React 19**
+- **Vite**
+- **Tailwind CSS v4** (with `@custom-variant dark` support)
+- **React Router DOM v7**
+- **Socket.IO Client (`socket.io-client`)**
+- **`qrcode`** (Vector & Canvas QR generation)
+- **`html5-qrcode`** (Camera barcode & QR scanning)
+- **Lucide React** (Icons)
+- **Context API** (`AuthContext`, `CartContext`, `MenuContext`, `OrderContext`, `ThemeContext`)
 
-## Project Structure
-
-```text
-src/
-├── components/
-│   └── common/       Shared images, status badges, dialogs, and toast UI
-├── context/          Auth, cart, menu, and order state providers
-├── data/             Centralized mock cafeteria menu
-├── layouts/          Customer and admin navigation shells
-├── pages/            Customer and admin route screens
-├── services/         Local menu, order, and storage service abstractions
-├── utils/            Currency, date, and token utilities
-├── App.jsx           Application routes and providers
-├── index.css         Theme tokens, compatibility utilities, and base styles
-└── main.jsx          React application entry point
-```
+---
 
 ## Getting Started
 
-From the frontend directory:
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   npm install
+   ```
 
-```bash
-npm install
-npm run dev
-```
+2. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
 
-Open the local URL shown by Vite, normally:
+3. Open `http://localhost:5173` in your browser.
 
-```text
-http://localhost:5173
-```
+Ensure the backend server is running on `http://localhost:5000` for live database access and WebSocket events.
 
-## Available Scripts
-
-```bash
-npm run dev       # Start the Vite development server
-npm run build     # Create a production build
-npm run preview   # Preview the production build locally
-npm run lint      # Run ESLint
-```
-
-## Demo Admin Credentials
-
-Use these credentials at `/admin/login`:
-
-```text
-Email:    admin@srkrcafeteria.demo
-Password: AdminDemo123!
-```
-
-This is simulated frontend authentication for demonstration only. The password is checked in the application and is not stored in LocalStorage. Frontend route guards do not replace backend authorization.
-
-## Mock Data and Persistence
-
-The frontend uses LocalStorage to simulate backend persistence:
-
-- `srkr_menu_data` stores menu edits and availability.
-- `srkr_cart_data` stores the current cart.
-- `srkr_orders_data` stores created orders and status updates.
-- `srkr_admin_auth` stores the demo admin session without the password.
-- `srkr_token_counter` supports local demo token generation.
-
-The order token and ID generators are isolated in utility/service modules so they can later be replaced with backend-generated identifiers.
-
-LocalStorage is device-specific and is not globally unique or safe for concurrent production orders. The backend must become the authoritative source for prices, availability, order IDs, tokens, and permissions.
-
-## Order Status Workflow
-
-The admin order workflow is:
-
-```text
-Pending → Preparing → Ready → Completed → Delivered
-```
-
-Orders can also be marked `Cancelled` where appropriate. Completed orders are preserved in order history rather than deleted.
-
-## Important Demo Limitations
-
-- No backend API is included.
-- No MongoDB, Express, Mongoose, JWT, or real authentication is included.
-- No real payment processing is included.
-- Menu images use remote demo URLs and include a visual fallback if an image fails.
-- LocalStorage data belongs only to the current browser profile.
-- The frontend mock token generator cannot guarantee global uniqueness.
-
-## Future MERN Integration
-
-The service layer is intentionally separated from the UI so it can be connected to a backend without rewriting the page components. Future API-backed operations should include:
-
-- `getMenuItems()`
-- `getMenuItemById(id)`
-- `createMenuItem(itemData)`
-- `updateMenuItem(itemId, itemData)`
-- `deleteMenuItem(itemId)`
-- `getOrders()`
-- `getOrderById(id)`
-- `createOrder(orderData)`
-- `updateOrderStatus(orderId, status)`
-
-The future backend should validate authentication, roles, inventory availability, prices, payment state, order transitions, and globally unique tokens.
+---
 
 ## Quality Checks
 
-Before sharing a change, run:
-
+Run linter:
 ```bash
 npm run lint
-npm run build
 ```
 
-The application is considered ready for the current frontend phase when both commands complete successfully.
+Run production build:
+```bash
+npm run build
+```

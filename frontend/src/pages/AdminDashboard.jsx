@@ -1,217 +1,107 @@
-import {
-  ShoppingBag, Clock, ChefHat, PackageCheck, CheckCircle,
-  TrendingUp, DollarSign, Star, Hash, ArrowRight,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowRight, Download, ShoppingBag, DollarSign, Star, Clock, PackageCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { apiRequest, authHeaders } from '../services/apiClient';
 import { useOrders } from '../context/OrderContext';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { formatCurrency } from '../utils/currency';
 import { timeAgo } from '../utils/dateFormatter';
-import { ORDER_STATUSES } from '../services/orderService';
+
+const today = new Date().toISOString().slice(0, 10);
 
 export default function AdminDashboard() {
-  const { orders, getTodayOrders } = useOrders();
+  const { orders } = useOrders();
+  const [from, setFrom] = useState(today);
+  const [to, setTo] = useState(today);
+  const [report, setReport] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const todayOrders = getTodayOrders();
+  useEffect(() => {
+    let active = true;
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    Promise.resolve().then(() => {
+      if (!active) return null;
+      setLoading(true);
+      setError('');
+      return apiRequest(`/orders/reports?${params}`, { headers: authHeaders() });
+    }).then((data) => { if (active && data) setReport(data); })
+      .catch((requestError) => { if (active) setError(requestError.message); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [from, to]);
 
-  // Stats
-  const totalToday = todayOrders.length;
-  const pending = todayOrders.filter((o) => o.status === ORDER_STATUSES.PENDING).length;
-  const preparing = todayOrders.filter((o) => o.status === ORDER_STATUSES.PREPARING).length;
-  const ready = todayOrders.filter((o) => o.status === ORDER_STATUSES.READY).length;
-  const completed = todayOrders.filter((o) => o.status === ORDER_STATUSES.COMPLETED).length;
-  const delivered = todayOrders.filter((o) => o.status === ORDER_STATUSES.DELIVERED).length;
-  const cancelled = todayOrders.filter((o) => o.status === ORDER_STATUSES.CANCELLED).length;
-  const revenue = todayOrders
-    .filter((o) => o.status !== ORDER_STATUSES.CANCELLED)
-    .reduce((sum, o) => sum + o.totalAmount, 0);
+  const exportCsv = () => {
+    if (!report) return;
+    const rows = [
+      ['Date', 'Orders', 'Revenue'],
+      ...report.dailySales.map((day) => [day.date, day.orderCount, day.revenue]),
+      [],
+      ['Popular item', 'Quantity sold', 'Revenue'],
+      ...report.popularItems.map((item) => [item.name, item.quantity, item.revenue]),
+      [],
+      ['Status', 'Orders'],
+      ...Object.entries(report.statusCounts),
+    ];
+    const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? '').replaceAll('"', '""')}"`).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `cafeteria-sales-${from || 'all'}-to-${to || 'all'}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
 
-  // Popular items (from all orders)
-  const itemCounts = {};
-  orders.forEach((order) => {
-    order.items.forEach((item) => {
-      if (!itemCounts[item.name]) itemCounts[item.name] = 0;
-      itemCounts[item.name] += item.quantity;
-    });
-  });
-  const popularItems = Object.entries(itemCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
-  // Recent orders
-  const recentOrders = orders.slice(0, 5);
-
-  // Status distribution for chart
-  const statusDist = [
-    { label: 'Pending', count: pending, color: 'bg-amber-500', textColor: 'text-amber-700' },
-    { label: 'Preparing', count: preparing, color: 'bg-blue-500', textColor: 'text-blue-700' },
-    { label: 'Ready', count: ready, color: 'bg-emerald-500', textColor: 'text-emerald-700' },
-    { label: 'Completed', count: completed, color: 'bg-gray-400', textColor: 'text-gray-700' },
-    { label: 'Delivered', count: delivered, color: 'bg-purple-500', textColor: 'text-purple-700' },
-    { label: 'Cancelled', count: cancelled, color: 'bg-red-400', textColor: 'text-red-700' },
-  ];
-  const maxCount = Math.max(...statusDist.map((s) => s.count), 1);
-
-  const stats = [
-    { label: 'Total Orders', value: totalToday, icon: ShoppingBag, color: 'bg-brand-50 text-brand-600' },
-    { label: 'Pending', value: pending, icon: Clock, color: 'bg-amber-50 text-amber-600' },
-    { label: 'Preparing', value: preparing, icon: ChefHat, color: 'bg-blue-50 text-blue-600' },
-    { label: 'Ready', value: ready, icon: PackageCheck, color: 'bg-emerald-50 text-emerald-600' },
-    { label: 'Completed', value: completed, icon: CheckCircle, color: 'bg-gray-100 text-gray-600' },
-    { label: 'Delivered', value: delivered, icon: PackageCheck, color: 'bg-purple-50 text-purple-600' },
-    { label: 'Revenue', value: formatCurrency(revenue), icon: DollarSign, color: 'bg-green-50 text-green-600', isRevenue: true },
-  ];
+  const summary = report?.summary || { orderCount: 0, revenue: 0, averageOrderValue: 0 };
+  const maxDailyRevenue = Math.max(1, ...(report?.dailySales || []).map((day) => day.revenue));
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-charcoal">Dashboard</h1>
-          <p className="mt-1 text-charcoal-muted text-sm">Today's cafeteria overview</p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          {stats.map((stat) => (
-            <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 p-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${stat.color}`}>
-                <stat.icon className="w-5 h-5" />
-              </div>
-              <p className="text-xs text-charcoal-muted font-medium">{stat.label}</p>
-              <p className="font-display font-bold text-xl text-charcoal mt-0.5">
-                {stat.isRevenue ? stat.value : stat.value}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Status Distribution */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h3 className="font-display font-bold text-charcoal mb-4">Order Status Distribution</h3>
-            {totalToday === 0 ? (
-              <div className="text-center py-8">
-                <ShoppingBag className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                <p className="text-sm text-charcoal-muted">No orders today yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {statusDist.map((s) => (
-                  <div key={s.label}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`text-xs font-medium ${s.textColor}`}>{s.label}</span>
-                      <span className="text-xs font-bold text-charcoal">{s.count}</span>
-                    </div>
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${s.color}`}
-                        style={{ width: `${(s.count / maxCount) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Popular Items */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h3 className="font-display font-bold text-charcoal mb-4">Popular Items</h3>
-            {popularItems.length === 0 ? (
-              <div className="text-center py-8">
-                <Star className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                <p className="text-sm text-charcoal-muted">No orders to analyze yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {popularItems.map(([name, count], i) => (
-                  <div key={name} className="flex items-center gap-3">
-                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold
-                      ${i === 0 ? 'bg-amber-100 text-amber-700' : i === 1 ? 'bg-gray-100 text-gray-600' : 'bg-brand-50 text-brand-600'}
-                    `}>
-                      {i + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-charcoal truncate">{name}</p>
-                    </div>
-                    <span className="text-sm font-bold text-charcoal-muted">{count}×</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Recent Orders */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-bold text-charcoal">Recent Orders</h3>
-              <Link
-                to="/admin/orders"
-                className="text-xs font-medium text-brand-600 hover:text-brand-700 flex items-center gap-1"
-              >
-                View All <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            {recentOrders.length === 0 ? (
-              <div className="text-center py-8">
-                <Clock className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                <p className="text-sm text-charcoal-muted">No orders yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {recentOrders.map((order) => (
-                  <Link
-                    key={order.id}
-                    to="/admin/orders"
-                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-1 px-2 py-1 bg-brand-50 rounded-lg">
-                      <Hash className="w-3 h-3 text-brand-500" />
-                      <span className="text-xs font-bold text-brand-700">{order.token}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-charcoal truncate">{order.customerName}</p>
-                      <p className="text-[10px] text-charcoal-muted">{timeAgo(order.createdAt)}</p>
-                    </div>
-                    <StatusBadge status={order.status} />
-                  </Link>
-                ))}
-              </div>
-            )}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+          <div><h1 className="font-display text-2xl sm:text-3xl font-bold text-charcoal dark:text-white">Sales Dashboard</h1><p className="mt-1 text-sm text-charcoal-muted dark:text-slate-400">Revenue and item sales across the selected dates</p></div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <label className="text-xs text-charcoal-muted dark:text-slate-400">From<input type="date" value={from} max={to || undefined} onChange={(event) => setFrom(event.target.value)} className="mt-1 block w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-charcoal dark:text-white" /></label>
+            <label className="text-xs text-charcoal-muted dark:text-slate-400">To<input type="date" value={to} min={from || undefined} onChange={(event) => setTo(event.target.value)} className="mt-1 block w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-charcoal dark:text-white" /></label>
+            <button onClick={exportCsv} disabled={!report || loading} className="self-end inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold disabled:opacity-50"><Download className="w-4 h-4" />Export CSV</button>
           </div>
         </div>
+        {error && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">Could not load sales report: {error}</div>}
+        {loading && !report && <p className="mb-4 text-sm text-charcoal-muted dark:text-slate-400">Loading report…</p>}
 
-        {/* Quick Actions */}
-        <div className="mt-8 grid sm:grid-cols-2 gap-4">
-          <Link
-            to="/admin/orders"
-            className="bg-white rounded-2xl border border-gray-100 p-6 flex items-center gap-4 card-hover group"
-          >
-            <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center">
-              <ShoppingBag className="w-6 h-6 text-brand-600" />
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-charcoal">Manage Orders</h3>
-              <p className="text-sm text-charcoal-muted">View and update order statuses</p>
-            </div>
-            <ArrowRight className="w-5 h-5 text-gray-300 ml-auto group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
-          </Link>
-
-          <Link
-            to="/admin/menu"
-            className="bg-white rounded-2xl border border-gray-100 p-6 flex items-center gap-4 card-hover group"
-          >
-            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-emerald-600" />
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-charcoal">Manage Menu</h3>
-              <p className="text-sm text-charcoal-muted">Edit items, prices, and availability</p>
-            </div>
-            <ArrowRight className="w-5 h-5 text-gray-300 ml-auto group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
-          </Link>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <Metric icon={ShoppingBag} label="Orders" value={summary.orderCount} />
+          <Metric icon={DollarSign} label="Revenue (excluding cancellations)" value={formatCurrency(summary.revenue)} />
+          <Metric icon={PackageCheck} label="Average order value" value={formatCurrency(summary.averageOrderValue)} />
         </div>
+
+        <div className="grid lg:grid-cols-2 gap-5">
+          <section className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+            <h2 className="font-display font-bold text-charcoal dark:text-white mb-4">Daily sales</h2>
+            {report?.dailySales?.length ? <div className="space-y-3">{report.dailySales.map((day) => <div key={day.date} className="grid grid-cols-[5.5rem_1fr_auto] items-center gap-3 text-sm"><span className="text-charcoal-muted dark:text-slate-400">{day.date}</span><div className="h-2 rounded-full bg-gray-100 dark:bg-slate-800"><div className="h-full rounded-full bg-brand-500" style={{ width: `${Math.max(2, day.revenue / maxDailyRevenue * 100)}%` }} /></div><span className="font-semibold text-charcoal dark:text-white">{formatCurrency(day.revenue)}</span></div>)}</div> : <p className="text-sm text-charcoal-muted dark:text-slate-400">No sales for these dates.</p>}
+          </section>
+          <section className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+            <h2 className="font-display font-bold text-charcoal dark:text-white mb-4">Popular items</h2>
+            {report?.popularItems?.length ? <div className="space-y-3">{report.popularItems.map((item, index) => <div key={item.name} className="flex items-center gap-3"><span className="w-7 h-7 grid place-items-center rounded-lg bg-amber-50 text-amber-700 text-xs font-bold dark:bg-amber-950/40 dark:text-amber-300">{index + 1}</span><span className="flex-1 min-w-0 truncate text-sm font-medium text-charcoal dark:text-white">{item.name}</span><span className="text-xs text-charcoal-muted dark:text-slate-400">{item.quantity} sold</span><span className="text-sm font-semibold text-charcoal dark:text-white">{formatCurrency(item.revenue)}</span></div>)}</div> : <p className="text-sm text-charcoal-muted dark:text-slate-400">No items sold for these dates.</p>}
+          </section>
+          <section className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+            <h2 className="font-display font-bold text-charcoal dark:text-white mb-4">Order counts by status</h2>
+            <div className="flex flex-wrap gap-2">{Object.entries(report?.statusCounts || {}).map(([status, count]) => <div key={status} className="flex items-center gap-2 rounded-xl bg-gray-50 dark:bg-slate-800 px-3 py-2"><StatusBadge status={status} /><strong className="text-sm text-charcoal dark:text-white">{count}</strong></div>)}</div>
+          </section>
+          <section className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+            <div className="flex items-center justify-between mb-3"><h2 className="font-display font-bold text-charcoal dark:text-white">Recent orders</h2><Link to="/admin/orders" className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 dark:text-brand-400">View all <ArrowRight className="w-3 h-3" /></Link></div>
+            {orders.slice(0, 5).map((order) => <div key={order.id} className="flex items-center gap-3 py-2 border-t border-gray-100 dark:border-slate-800"><Clock className="w-4 h-4 text-charcoal-muted" /><span className="font-semibold text-brand-600 dark:text-brand-400">{order.token}</span><span className="flex-1 truncate text-sm text-charcoal dark:text-white">{order.customerName} · {timeAgo(order.createdAt)}</span><StatusBadge status={order.status} /></div>)}
+            {!orders.length && <p className="text-sm text-charcoal-muted dark:text-slate-400">No recent orders.</p>}
+          </section>
+        </div>
+        <div className="mt-6 flex gap-3"><Link to="/admin/orders" className="px-4 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold">Manage orders</Link><Link to="/admin/menu" className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 text-sm font-semibold text-charcoal dark:text-white">Manage menu</Link><span className="ml-auto inline-flex items-center gap-1 text-xs text-charcoal-muted dark:text-slate-400"><Star className="w-3.5 h-3.5" />Reports use all matching database records.</span></div>
       </div>
     </div>
   );
+}
+
+function Metric({ icon: Icon, label, value }) {
+  return <div className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5"><div className="flex items-center gap-2 text-brand-600 dark:text-brand-400"><Icon className="w-5 h-5" /><span className="text-xs font-semibold">{label}</span></div><p className="mt-3 font-display text-2xl font-bold text-charcoal dark:text-white">{value}</p></div>;
 }

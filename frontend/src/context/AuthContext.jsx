@@ -2,16 +2,8 @@
 /**
  * Auth Context — SRKR Cafeteria
  * 
- * ⚠ DEMO-ONLY AUTHENTICATION
- * This is a frontend-only session mechanism for prototype/demo purposes.
- * It does NOT provide real security. Frontend route guards do NOT
- * replace backend authorization.
+ * Provides authentication state management backed by the backend JWT API.
  * 
- * In production, authentication will use JWT tokens validated by the backend.
- * 
- * Demo Credentials:
- *   Email:    admin@srkrcafeteria.demo
- *   Password: AdminDemo123!
  */
 
 import { createContext, useContext, useState, useCallback } from 'react';
@@ -20,19 +12,10 @@ import { apiRequest, clearApiToken, getApiToken, setApiToken } from '../services
 
 const AuthContext = createContext(null);
 
-// Demo credentials — NOT stored in localStorage, only checked on login
-const DEMO_CREDENTIALS = {
-  email: 'admin@srkrcafeteria.demo',
-  password: 'AdminDemo123!',
-  name: 'Admin',
-  role: 'admin',
-};
-
 export function AuthProvider({ children }) {
-  const [admin, setAdmin] = useState(() => {
+  const [user, setUser] = useState(() => {
     const stored = getStoredAuth();
     const token = getApiToken();
-    // A local session without its API token cannot access protected routes.
     if (stored && stored.isAuthenticated && token) {
       return stored;
     }
@@ -43,21 +26,53 @@ export function AuthProvider({ children }) {
     return null;
   });
 
-  const login = useCallback(async (email, password) => {
+  const establishSession = useCallback(async (endpoint, email, password, requiredRole) => {
     try {
-      const { token, user } = await apiRequest('/auth/login', {
+      const { token, user: apiUser } = await apiRequest(endpoint, {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
+      if (apiUser.role !== requiredRole) return { success: false, error: 'Invalid email or password' };
       const session = {
         isAuthenticated: true,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+        id: apiUser.id,
+        name: apiUser.name,
+        email: apiUser.email,
+        role: apiUser.role,
+        studentId: apiUser.studentId,
+        contactInfo: apiUser.contactInfo,
         loginTime: new Date().toISOString(),
       };
       setApiToken(token);
-      setAdmin(session);
+      setUser(session);
+      setStoredAuth(session);
+      return { success: true, role: apiUser.role };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }, []);
+
+  const login = useCallback((email, password) => establishSession('/auth/login', email, password, 'customer'), [establishSession]);
+  const loginAdmin = useCallback((email, password) => establishSession('/auth/admin/login', email, password, 'admin'), [establishSession]);
+
+  const register = useCallback(async ({ name, email, password, studentId, contactInfo }) => {
+    try {
+      const { token, user: apiUser } = await apiRequest('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, password, studentId, contactInfo }),
+      });
+      const session = {
+        isAuthenticated: true,
+        id: apiUser.id,
+        name: apiUser.name,
+        email: apiUser.email,
+        role: apiUser.role,
+        studentId: apiUser.studentId,
+        contactInfo: apiUser.contactInfo,
+        loginTime: new Date().toISOString(),
+      };
+      setApiToken(token);
+      setUser(session);
       setStoredAuth(session);
       return { success: true };
     } catch (error) {
@@ -66,22 +81,25 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => {
-    setAdmin(null);
+    setUser(null);
     clearApiToken();
     clearStoredAuth();
   }, []);
 
-  const isAuthenticated = admin?.isAuthenticated === true;
+  const isAuthenticated = user?.isAuthenticated === true;
+  const isAdmin = user?.role === 'admin';
+  const isCustomer = user?.role === 'customer';
 
   const value = {
-    admin,
+    user,
+    admin: isAdmin ? user : null,
     isAuthenticated,
+    isAdmin,
+    isCustomer,
     login,
+    loginAdmin,
+    register,
     logout,
-    demoCredentials: {
-      email: DEMO_CREDENTIALS.email,
-      password: DEMO_CREDENTIALS.password,
-    },
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

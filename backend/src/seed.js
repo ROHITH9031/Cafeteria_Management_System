@@ -8,7 +8,7 @@ import User from './models/User.js';
 
 await connectDatabase();
 await MenuItem.bulkWrite(mockMenu.map((item) => ({
-  updateOne: { filter: { itemId: item.id }, update: { $set: { itemId: item.id, name: item.name, description: item.description, price: item.price, category: item.category, image: item.image, available: item.available, popular: item.popular, featured: item.featured, preparationTime: item.preparationTime } }, upsert: true },
+  updateOne: { filter: { itemId: item.id }, update: { $set: { itemId: item.id, name: item.name, description: item.description, price: item.price, category: item.category, image: item.image, available: item.available, popular: item.popular, featured: item.featured, preparationTime: item.preparationTime }, $setOnInsert: { stock: item.stock ?? 25, dietaryTags: item.dietaryTags || [] } }, upsert: true },
 })));
 
 if (!env.adminPassword) {

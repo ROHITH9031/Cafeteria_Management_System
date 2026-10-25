@@ -1,10 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Outfit', 'Inter', system-ui, sans-serif;
-  
+
   --color-brand-50: #fff7ed;
   --color-brand-100: #ffedd5;
   --color-brand-200: #fed7aa;
@@ -15,15 +16,30 @@
   --color-brand-700: #c2410c;
   --color-brand-800: #9a3412;
   --color-brand-900: #7c2d12;
-  
+
   --color-surface: #ffffff;
-  --color-surface-hover: #f9fafb;
-  --color-surface-dim: #f3f4f6;
+  --color-surface-hover: #f8fafc;
+  --color-surface-dim: #eef2f7;
   --color-surface-dark: #1f2937;
-  
+
   --color-charcoal: #111827;
   --color-charcoal-light: #374151;
-  --color-charcoal-muted: #6b7280;
+  --color-charcoal-muted: #596579;
+  --color-bg-base: #f5f7fb;
+  --color-border-subtle: #e7ebf1;
+}
+
+.dark {
+  --color-surface: #0f172a;
+  --color-surface-hover: #1e293b;
+  --color-surface-dim: #020617;
+  --color-surface-dark: #090d16;
+
+  --color-charcoal: #f8fafc;
+  --color-charcoal-light: #e2e8f0;
+  --color-charcoal-muted: #94a3b8;
+  --color-bg-base: #020617;
+  --color-border-subtle: #1e293b;
 }
 
 /* Custom utilities kept standard-CSS compatible for editor validation. */
@@ -66,19 +82,43 @@
   scrollbar-color: #d1d5db transparent;
 }
 
+.dark * {
+  scrollbar-color: #334155 transparent;
+}
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
 
+:root { color-scheme: light; }
+
+html.dark {
+  color-scheme: dark;
+}
+
 body {
   font-family: var(--font-sans);
   color: var(--color-charcoal);
-  background-color: #fafafa;
+  background-color: var(--color-bg-base);
   min-width: 320px;
+  overflow-x: hidden;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#root,
+main {
+  min-width: 0;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
 }
 
 button,
@@ -179,14 +219,23 @@ button {
   border-radius: 8px;
 }
 
+.dark .skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 200% 100%;
+}
+
 /* ─── Card Hover Effect ─────────────────────────────── */
 .card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .card-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.dark .card-hover:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
 /* ─── Status Badge Base ─────────────────────────────── */
@@ -230,8 +279,62 @@ button {
   background-color: #9ca3af;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #334155;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #475569;
+}
+
 /* ─── Image Fallback ────────────────────────────────── */
 img[src=""],
 img:not([src]) {
   background-color: #f3f4f6;
+}
+
+.dark img[src=""],
+.dark img:not([src]) {
+  background-color: #1e293b;
+}
+
+/* Keep nested panels and controls usable on narrow screens. */
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .card-hover:hover {
+    transform: none;
+  }
+
+  .status-badge {
+    padding: 3px 9px;
+    font-size: 0.7rem;
+  }
+
+  .fixed.inset-0 > .relative {
+    max-height: calc(100dvh - 1.5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

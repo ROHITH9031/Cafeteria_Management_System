@@ -17,6 +17,7 @@ const orderSchema = new mongoose.Schema(
     customerName: { type: String, required: true, trim: true, maxlength: 80 },
     studentId: { type: String, trim: true, maxlength: 40 },
     contactInfo: { type: String, trim: true, maxlength: 30 },
+    stockDeducted: { type: Boolean, default: true, select: false },
     orderType: { type: String, enum: ['Dine-in', 'Parcel'], default: 'Dine-in' },
     items: { type: [orderItemSchema], required: true, validate: (items) => items.length > 0 },
     totalAmount: { type: Number, required: true, min: 0 },
@@ -29,7 +30,9 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-orderSchema.index({ createdAt: -1 });
-orderSchema.index({ customer: 1, createdAt: -1 });
+orderSchema.index({ createdAt: -1, _id: -1 });
+orderSchema.index({ customer: 1, createdAt: -1, _id: -1 });
+orderSchema.index({ status: 1, createdAt: -1, _id: -1 });
+orderSchema.index({ customerName: 1 });
 
 export default mongoose.model('Order', orderSchema);
