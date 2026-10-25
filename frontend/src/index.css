@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', 'Inter', system-ui, sans-serif;
+  
+  --color-brand-50: #fff7ed;
+  --color-brand-100: #ffedd5;
+  --color-brand-200: #fed7aa;
+  --color-brand-300: #fdba74;
+  --color-brand-400: #fb923c;
+  --color-brand-500: #f97316;
+  --color-brand-600: #ea580c;
+  --color-brand-700: #c2410c;
+  --color-brand-800: #9a3412;
+  --color-brand-900: #7c2d12;
+  
+  --color-surface: #ffffff;
+  --color-surface-hover: #f9fafb;
+  --color-surface-dim: #f3f4f6;
+  --color-surface-dark: #1f2937;
+  
+  --color-charcoal: #111827;
+  --color-charcoal-light: #374151;
+  --color-charcoal-muted: #6b7280;
+}
+
+/* Custom utilities kept standard-CSS compatible for editor validation. */
+.font-sans { font-family: var(--font-sans); }
+.font-display { font-family: var(--font-display); }
+.bg-brand-50 { background-color: var(--color-brand-50); }
+.bg-brand-100 { background-color: var(--color-brand-100); }
+.bg-brand-500 { background-color: var(--color-brand-500); }
+.bg-brand-600 { background-color: var(--color-brand-600); }
+.bg-charcoal { background-color: var(--color-charcoal); }
+.bg-brand-200\/20 { background-color: rgb(254 215 170 / 0.2); }
+.bg-brand-50\/90 { background-color: rgb(255 247 237 / 0.9); }
+.bg-brand-500\/20 { background-color: rgb(249 115 22 / 0.2); }
+.text-brand-400 { color: var(--color-brand-400); }
+.text-brand-500 { color: var(--color-brand-500); }
+.text-brand-600 { color: var(--color-brand-600); }
+.text-brand-700 { color: var(--color-brand-700); }
+.text-charcoal { color: var(--color-charcoal); }
+.text-charcoal-muted { color: var(--color-charcoal-muted); }
+.text-charcoal-muted\/60 { color: rgb(107 114 128 / 0.6); }
+.border-brand-100 { border-color: var(--color-brand-100); }
+.border-brand-200 { border-color: var(--color-brand-200); }
+.border-brand-400 { border-color: var(--color-brand-400); }
+.from-brand-50 { --tw-gradient-from: var(--color-brand-50); }
+.from-brand-200 { --tw-gradient-from: var(--color-brand-200); }
+.from-brand-500 { --tw-gradient-from: var(--color-brand-500); }
+.from-charcoal { --tw-gradient-from: var(--color-charcoal); }
+.to-brand-100 { --tw-gradient-to: var(--color-brand-100); }
+.to-brand-600 { --tw-gradient-to: var(--color-brand-600); }
+.ring-brand-500\/20 { --tw-ring-color: rgb(249 115 22 / 0.2); }
+.shadow-brand-500\/20 { --tw-shadow-color: rgb(249 115 22 / 0.2); }
+.shadow-brand-500\/25 { --tw-shadow-color: rgb(249 115 22 / 0.25); }
+.shadow-brand-500\/30 { --tw-shadow-color: rgb(249 115 22 / 0.3); }
+
+/* ─── Base Styles ───────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-charcoal);
+  background-color: #fafafa;
+  min-width: 320px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* ─── Focus Styles ──────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Toast Animation ───────────────────────────────── */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+}
+
+.toast-enter {
+  animation: toast-in 0.3s ease-out forwards;
+}
+
+.toast-exit {
+  animation: toast-out 0.25s ease-in forwards;
+}
+
+/* ─── Slide-up Animation ────────────────────────────── */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+/* ─── Fade-in Animation ─────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* ─── Pulse Dot Animation ───────────────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ─── Skeleton Loading ──────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ─── Card Hover Effect ─────────────────────────────── */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Status Badge Base ─────────────────────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+/* ─── Overlay Backdrop ──────────────────────────────── */
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.backdrop-animate {
+  animation: backdrop-in 0.2s ease-out forwards;
+}
+
+/* ─── Custom Scrollbar ──────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+/* ─── Image Fallback ────────────────────────────────── */
+img[src=""],
+img:not([src]) {
+  background-color: #f3f4f6;
+}
