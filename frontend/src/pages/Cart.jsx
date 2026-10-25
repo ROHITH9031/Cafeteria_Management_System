@@ -29,6 +29,8 @@ export default function Cart() {
   });
   const [errors, setErrors] = useState({});
   const [showReview, setShowReview] = useState(false);
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   // Check if any cart items have become unavailable
   const unavailableItems = cart.filter((cartItem) => {
@@ -52,26 +54,37 @@ export default function Cart() {
     setShowReview(true);
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     // Remove unavailable items from cart before placing order
     const validItems = cart.filter((cartItem) => {
       const menuItem = menu.find((m) => m.id === cartItem.id);
       return menuItem && menuItem.available;
     });
 
-    if (validItems.length === 0) return;
+    if (validItems.length === 0) {
+      setSubmitError('No available items remain in your cart. Please return to the menu.');
+      return;
+    }
 
-    const newOrder = createNewOrder({
-      customerName: form.customerName.trim(),
-      studentId: form.studentId.trim(),
-      contactInfo: form.contactInfo.trim(),
-      orderType: form.orderType,
-      items: validItems,
-    });
-
-    if (newOrder) {
+    setPlacingOrder(true);
+    setSubmitError('');
+    try {
+      const newOrder = await createNewOrder({
+        customerName: form.customerName.trim(),
+        studentId: form.studentId.trim(),
+        contactInfo: form.contactInfo.trim(),
+        orderType: form.orderType,
+        items: validItems,
+      });
+      if (!newOrder?.id) {
+        throw new Error('The server did not return a saved order. Please try again.');
+      }
       clearCart();
       navigate(`/orders/${newOrder.id}`, { state: { justPlaced: true } });
+    } catch (error) {
+      setSubmitError(error.message || 'Unable to place your order. Please try again.');
+    } finally {
+      setPlacingOrder(false);
     }
   };
 
@@ -238,6 +251,12 @@ export default function Cart() {
                   </p>
                 </div>
 
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700">
+                    {submitError}
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowReview(false)}
@@ -247,9 +266,10 @@ export default function Cart() {
                   </button>
                   <button
                     onClick={handlePlaceOrder}
-                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors text-sm"
+                    disabled={placingOrder}
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors text-sm"
                   >
-                    Place Order
+                    {placingOrder ? 'Placing...' : 'Place Order'}
                   </button>
                 </div>
               </div>

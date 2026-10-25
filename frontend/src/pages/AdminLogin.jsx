@@ -28,16 +28,14 @@ export default function AdminLogin() {
     }
 
     setLoading(true);
-    // Simulate brief delay for UX
-    setTimeout(() => {
-      const result = login(email, password);
+    login(email, password).then((result) => {
       if (result.success) {
         navigate('/admin', { replace: true });
       } else {
         setError(result.error);
       }
       setLoading(false);
-    }, 400);
+    });
   };
 
   const fillDemoCredentials = () => {

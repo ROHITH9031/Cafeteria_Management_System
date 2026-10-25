@@ -16,6 +16,7 @@
 
 import { createContext, useContext, useState, useCallback } from 'react';
 import { getStoredAuth, setStoredAuth, clearStoredAuth } from '../services/storageService';
+import { apiRequest, clearApiToken, getApiToken, setApiToken } from '../services/apiClient';
 
 const AuthContext = createContext(null);
 
@@ -30,34 +31,43 @@ const DEMO_CREDENTIALS = {
 export function AuthProvider({ children }) {
   const [admin, setAdmin] = useState(() => {
     const stored = getStoredAuth();
-    // Only restore session info (no password stored)
-    if (stored && stored.isAuthenticated) {
+    const token = getApiToken();
+    // A local session without its API token cannot access protected routes.
+    if (stored && stored.isAuthenticated && token) {
       return stored;
+    }
+    if (stored || token) {
+      clearStoredAuth();
+      clearApiToken();
     }
     return null;
   });
 
-  const login = useCallback((email, password) => {
-    if (
-      email.toLowerCase() === DEMO_CREDENTIALS.email.toLowerCase() &&
-      password === DEMO_CREDENTIALS.password
-    ) {
+  const login = useCallback(async (email, password) => {
+    try {
+      const { token, user } = await apiRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
       const session = {
         isAuthenticated: true,
-        name: DEMO_CREDENTIALS.name,
-        email: DEMO_CREDENTIALS.email,
-        role: DEMO_CREDENTIALS.role,
+        name: user.name,
+        email: user.email,
+        role: user.role,
         loginTime: new Date().toISOString(),
       };
+      setApiToken(token);
       setAdmin(session);
-      setStoredAuth(session); // No password stored
+      setStoredAuth(session);
       return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
-    return { success: false, error: 'Invalid email or password' };
   }, []);
 
   const logout = useCallback(() => {
     setAdmin(null);
+    clearApiToken();
     clearStoredAuth();
   }, []);
 

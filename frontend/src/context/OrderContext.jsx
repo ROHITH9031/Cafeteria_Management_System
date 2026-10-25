@@ -1,42 +1,80 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import * as orderService from '../services/orderService';
+import { apiRequest, authHeaders } from '../services/apiClient';
+import { useAuth } from './AuthContext';
 
 const OrderContext = createContext(null);
 
 export function OrderProvider({ children }) {
   const [orders, setOrders] = useState(() => orderService.initializeOrders());
+  const [orderError, setOrderError] = useState('');
+  const { isAuthenticated, logout } = useAuth();
   
   // Guard against double-creation in StrictMode
   const creatingRef = useRef(false);
 
-  const createNewOrder = useCallback((orderData) => {
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    apiRequest('/orders', { headers: authHeaders() })
+      .then(({ orders: serverOrders }) => setOrders(serverOrders.map(orderService.normalizeOrder)))
+      .catch((error) => {
+        console.error('[OrderContext] Failed to load orders:', error);
+        if (error.message === 'Authentication required' || error.message === 'Invalid or expired token') {
+          logout();
+        }
+      });
+  }, [isAuthenticated, logout]);
+
+  const createNewOrder = useCallback(async (orderData) => {
     // Prevent duplicate order creation from StrictMode double-invoke
     if (creatingRef.current) return null;
     creatingRef.current = true;
 
-    let result;
-    setOrders((prev) => {
-      const { updatedOrders, newOrder } = orderService.createOrder(prev, orderData);
-      result = newOrder;
-      return updatedOrders;
-    });
-
-    // Reset guard after a tick
-    setTimeout(() => {
+    try {
+      setOrderError('');
+      const response = await apiRequest('/orders', {
+        method: 'POST',
+        body: JSON.stringify(orderData),
+      });
+      if (!response.persisted || !response.order?._id) {
+        throw new Error('The server did not confirm that the order was saved. Please try again.');
+      }
+      const { order } = response;
+      const newOrder = orderService.normalizeOrder(order);
+      setOrders((prev) => [newOrder, ...prev.filter((item) => item.id !== newOrder.id)]);
+      return newOrder;
+    } catch (error) {
+      console.error('[OrderContext] Failed to create order:', error);
+      setOrderError(error.message);
+      throw error;
+    } finally {
       creatingRef.current = false;
-    }, 100);
-
-    return result;
+    }
   }, []);
 
-  const updateStatus = useCallback((orderId, newStatus) => {
-    setOrders((prev) => orderService.updateOrderStatus(prev, orderId, newStatus));
-  }, []);
+  const clearOrderError = useCallback(() => setOrderError(''), []);
 
-  const cancelOrder = useCallback((orderId) => {
-    setOrders((prev) => orderService.cancelOrder(prev, orderId));
-  }, []);
+  const updateStatus = useCallback(async (orderId, newStatus) => {
+    try {
+      const { order } = await apiRequest(`/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const updated = orderService.normalizeOrder(order);
+      setOrders((prev) => prev.map((item) => item.id === updated.id ? updated : item));
+    } catch (error) {
+      console.error('[OrderContext] Failed to update order status:', error);
+      if (error.message === 'Authentication required' || error.message === 'Invalid or expired token') {
+        logout();
+      }
+    }
+  }, [logout]);
+
+  const cancelOrder = useCallback(async (orderId) => {
+    await updateStatus(orderId, orderService.ORDER_STATUSES.CANCELLED);
+  }, [updateStatus]);
 
   const getOrderById = useCallback((orderId) => {
     return orders.find((o) => o.id === orderId);
@@ -53,6 +91,8 @@ export function OrderProvider({ children }) {
     cancelOrder,
     getOrderById,
     getTodayOrders,
+    orderError,
+    clearOrderError,
   };
 
   return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>;

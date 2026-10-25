@@ -1,8 +1,9 @@
 /**
  * Order Service — SRKR Cafeteria
  * 
- * Abstracts order data operations. Currently uses localStorage.
- * In production, these functions will call the backend API.
+ * Defines order constants and local normalization helpers.
+ * Orders are persisted through the backend API; localStorage is retained
+ * only as a fallback for legacy browser data.
  */
 
 import { getStoredOrders, setStoredOrders } from './storageService';
@@ -44,11 +45,22 @@ export const STATUS_STEPS = [
 ];
 
 /**
- * Initialize orders from localStorage.
+ * Initialize legacy orders from localStorage until the API responds.
  * @returns {Array}
  */
 export function initializeOrders() {
   return getStoredOrders();
+}
+
+export function normalizeOrder(order) {
+  return {
+    ...order,
+    id: order.id || order._id,
+    items: (order.items || []).map((item) => ({
+      ...item,
+      id: item.id || item.itemId,
+    })),
+  };
 }
 
 /**
