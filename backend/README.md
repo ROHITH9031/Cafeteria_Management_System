@@ -24,6 +24,21 @@ Set a real `JWT_SECRET`, MongoDB connection string, and admin password in `.env`
 The JWT secret must contain at least 32 characters. Do not commit `.env` or share database credentials.
 Set `MONGODB_DB_NAME=srkr_cafeteria` so menu items and orders are always written to the same database.
 
+For the deployed frontend, configure these Render environment variables and redeploy the service:
+
+```env
+CLIENT_ORIGIN=https://cafeteria-management-system-vert.vercel.app
+ALLOWED_ORIGINS=https://cafeteria-management-system-vert.vercel.app
+```
+
+Configure this Vercel environment variable and redeploy the frontend:
+
+```env
+VITE_API_URL=https://cafeteria-management-system-yz9e.onrender.com/api
+```
+
+The `/api` suffix is required, and the URL must not end with an extra slash.
+
 Start MongoDB, then seed the menu and admin account:
 
 ```powershell

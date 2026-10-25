@@ -23,7 +23,10 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-  allowedOrigins: (process.env.ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean),
+  allowedOrigins: (process.env.ALLOWED_ORIGINS || 'https://cafeteria-management-system-vert.vercel.app')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   adminEmail: process.env.ADMIN_EMAIL || 'admin@srkrcafeteria.demo',
   adminPassword: process.env.ADMIN_PASSWORD,
 };
