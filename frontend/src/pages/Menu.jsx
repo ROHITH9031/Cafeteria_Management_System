@@ -248,7 +248,7 @@ function MenuCard({ item, addToCart, getItemQuantity, updateQuantity }) {
               >
                 <Minus className="w-4 h-4" />
               </button>
-              <span className="font-display font-bold text-brand-700 text-base min-w-[2rem] text-center">
+              <span className="font-display font-bold text-brand-700 text-base min-w-8 text-center">
                 {quantity}
               </span>
               <button

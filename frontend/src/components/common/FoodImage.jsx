@@ -7,7 +7,7 @@ export default function FoodImage({ src, alt, className = '' }) {
 
   if (error || !src) {
     return (
-      <div className={`flex items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 ${className}`}>
+      <div className={`flex items-center justify-center bg-linear-to-br from-brand-50 to-brand-100 ${className}`}>
         <UtensilsCrossed className="w-10 h-10 text-brand-300" />
       </div>
     );

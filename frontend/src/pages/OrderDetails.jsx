@@ -1,7 +1,7 @@
 import { useParams, useLocation, Link } from 'react-router-dom';
 import {
   Hash, ArrowLeft, Clock,
-  User, Phone, CreditCard, PartyPopper, MapPin,
+  User, Phone, CreditCard, PartyPopper, MapPin, ShoppingBag, Utensils,
 } from 'lucide-react';
 import { useOrders } from '../context/OrderContext';
 import { StatusProgress } from '../components/common/StatusBadge';
@@ -48,7 +48,7 @@ export default function OrderDetails() {
 
       {/* Success Banner (only shown right after placing order) */}
       {justPlaced && (
-        <div className="mb-6 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6 text-center animate-slide-up">
+        <div className="mb-6 bg-linear-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6 text-center animate-slide-up">
           <PartyPopper className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
           <h2 className="font-display text-xl font-bold text-emerald-800">Order Placed Successfully!</h2>
           <p className="mt-1 text-sm text-emerald-600">Your order is in the kitchen queue. Show your token when it is ready.</p>
@@ -56,7 +56,7 @@ export default function OrderDetails() {
       )}
 
       {/* Token Card */}
-      <div className="bg-gradient-to-br from-brand-500 to-brand-600 rounded-3xl p-8 text-center text-white mb-8 relative overflow-hidden">
+      <div className="bg-linear-to-br from-brand-500 to-brand-600 rounded-3xl p-8 text-center text-white mb-8 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent_50%)]" />
         <div className="relative">
           <p className="text-sm font-medium text-white/70 uppercase tracking-wider mb-2">Your Token</p>
@@ -106,6 +106,15 @@ export default function OrderDetails() {
             <Clock className="w-4 h-4 text-charcoal-muted" />
             <span className="text-charcoal-muted">Ordered:</span>
             <span className="font-medium text-charcoal">{formatDateTime(order.createdAt)}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            {order.orderType === 'Parcel' ? (
+              <ShoppingBag className="w-4 h-4 text-charcoal-muted" />
+            ) : (
+              <Utensils className="w-4 h-4 text-charcoal-muted" />
+            )}
+            <span className="text-charcoal-muted">Serving:</span>
+            <span className="font-medium text-charcoal">{order.orderType || 'Dine-in'}</span>
           </div>
         </div>
 

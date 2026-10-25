@@ -10,7 +10,7 @@ export default function ConfirmDialog({ isOpen, onClose, onConfirm, title, messa
   };
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 backdrop-animate">
+    <div className="fixed inset-0 z-90 flex items-center justify-center p-4 backdrop-animate">
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-slide-up">
         <button

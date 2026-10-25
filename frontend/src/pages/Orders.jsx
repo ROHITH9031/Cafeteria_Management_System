@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ClipboardList, ArrowRight, UtensilsCrossed, Hash } from 'lucide-react';
+import { ClipboardList, ArrowRight, UtensilsCrossed, Hash, ShoppingBag, Utensils } from 'lucide-react';
 import { useOrders } from '../context/OrderContext';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { formatCurrency } from '../utils/currency';
@@ -62,9 +62,15 @@ export default function Orders() {
                   {formatDateTime(order.createdAt)} · {timeAgo(order.createdAt)}
                 </p>
               </div>
-              <p className="font-display font-bold text-brand-600 text-lg shrink-0">
-                {formatCurrency(order.totalAmount)}
-              </p>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-charcoal-muted">
+                  {order.orderType === 'Parcel' ? <ShoppingBag className="w-3.5 h-3.5" /> : <Utensils className="w-3.5 h-3.5" />}
+                  {order.orderType || 'Dine-in'}
+                </span>
+                <p className="font-display font-bold text-brand-600 text-lg">
+                  {formatCurrency(order.totalAmount)}
+                </p>
+              </div>
             </div>
           </Link>
         ))}

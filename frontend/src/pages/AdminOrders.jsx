@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Search, SlidersHorizontal, Eye, ChevronDown, Clock, UserRound,
-  Hash, PackageCheck, XCircle, ArrowRight, UtensilsCrossed,
+  Hash, PackageCheck, XCircle, ArrowRight, UtensilsCrossed, ShoppingBag, Utensils,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useOrders } from '../context/OrderContext';
@@ -149,6 +149,10 @@ function OrderCard({ order, onStatusChange, onView }) {
             <p className="text-xs text-charcoal-muted flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{formatDateTime(order.createdAt)}</p>
           </div>
           <p className="text-sm text-charcoal-muted mt-1 truncate">{order.items.map((item) => `${item.name} × ${item.quantity}`).join(', ')}</p>
+          <p className="text-xs text-brand-600 mt-1 flex items-center gap-1">
+            {order.orderType === 'Parcel' ? <ShoppingBag className="w-3 h-3" /> : <Utensils className="w-3 h-3" />}
+            {order.orderType || 'Dine-in'}
+          </p>
         </div>
         <div className="flex items-center justify-between xl:justify-end gap-4">
           <div className="text-left xl:text-right">
@@ -172,7 +176,7 @@ function OrderCard({ order, onStatusChange, onView }) {
 
 function OrderDetailsModal({ order, onClose }) {
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-80 flex items-center justify-center p-4">
       <button className="fixed inset-0 bg-black/40 backdrop-blur-sm cursor-default" onClick={onClose} aria-label="Close order details" />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
         <div className="flex items-start justify-between mb-5">
@@ -184,7 +188,12 @@ function OrderDetailsModal({ order, onClose }) {
           {order.items.map((item) => <div key={item.id} className="flex justify-between text-sm"><span>{item.name} <span className="text-charcoal-muted">× {item.quantity}</span></span><span className="font-semibold">{formatCurrency(item.price * item.quantity)}</span></div>)}
         </div>
         <div className="border-t border-gray-100 pt-4 flex justify-between font-display font-bold"><span>Total</span><span className="text-brand-600">{formatCurrency(order.totalAmount)}</span></div>
-        <div className="mt-5 text-xs text-charcoal-muted space-y-1"><p>Customer: {order.customerName}</p><p>Order ID: {order.id}</p><p>Placed: {formatDateTime(order.createdAt)}</p></div>
+        <div className="mt-5 text-xs text-charcoal-muted space-y-1">
+          <p>Customer: {order.customerName}</p>
+          <p>Serving: <span className="font-medium text-charcoal">{order.orderType || 'Dine-in'}</span></p>
+          <p>Order ID: {order.id}</p>
+          <p>Placed: {formatDateTime(order.createdAt)}</p>
+        </div>
       </div>
     </div>
   );

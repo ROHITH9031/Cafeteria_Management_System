@@ -18,6 +18,12 @@ export const ORDER_STATUSES = {
   CANCELLED: 'Cancelled',
 };
 
+/** Available order fulfillment options */
+export const ORDER_TYPES = {
+  DINE_IN: 'Dine-in',
+  PARCEL: 'Parcel',
+};
+
 /** Status colors for consistent visual styling */
 export const STATUS_COLORS = {
   [ORDER_STATUSES.PENDING]: { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-300', dot: 'bg-amber-500' },
@@ -77,7 +83,7 @@ export function getTodayOrders(orders) {
 /**
  * Create a new order.
  * @param {Array} orders
- * @param {Object} orderData - { items, customerName, studentId, contactInfo }
+ * @param {Object} orderData - { items, customerName, studentId, contactInfo, orderType }
  * @returns {{ updatedOrders: Array, newOrder: Object }}
  */
 export function createOrder(orders, orderData) {
@@ -87,6 +93,7 @@ export function createOrder(orders, orderData) {
     customerName: orderData.customerName,
     studentId: orderData.studentId || '',
     contactInfo: orderData.contactInfo || '',
+    orderType: orderData.orderType || ORDER_TYPES.DINE_IN,
     items: orderData.items.map((item) => ({
       id: item.id,
       name: item.name,

@@ -81,9 +81,9 @@ export default function Home() {
               </div>
             </div>
             <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-              <div className="absolute -inset-4 rounded-[2rem] bg-brand-500/10 blur-2xl" />
+              <div className="absolute -inset-4 rounded-4xl bg-brand-500/10 blur-2xl" />
               {heroItem && (
-                <div className="relative overflow-hidden rounded-[2rem] border-8 border-white bg-white shadow-2xl shadow-brand-900/10">
+                <div className="relative overflow-hidden rounded-4xl border-8 border-white bg-white shadow-2xl shadow-brand-900/10">
                   <FoodImage src={heroItem.image} alt={heroItem.name} className="h-72 w-full sm:h-96" />
                   <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-brand-700 backdrop-blur">
                     Today’s pick
@@ -98,7 +98,7 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              <div className="absolute -bottom-5 -left-3 flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-xl sm:left-[-1.5rem]">
+              <div className="absolute -bottom-5 -left-3 flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-xl sm:-left-6">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><PackageCheck className="h-5 w-5" /></div>
                 <div><p className="text-xs font-bold text-charcoal">Token-based pickup</p><p className="text-[11px] text-charcoal-muted">No counter queue</p></div>
               </div>
@@ -136,7 +136,7 @@ export default function Home() {
               key={cat.name}
               className="group relative overflow-hidden rounded-2xl p-6 bg-white border border-gray-100 card-hover"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+              <div className={`absolute inset-0 bg-linear-to-br ${cat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
               <div className="text-4xl mb-3">{cat.icon}</div>
               <h3 className="font-display font-semibold text-charcoal">{cat.name}</h3>
               <p className="text-sm text-charcoal-muted mt-1">{cat.count} items</p>
@@ -158,9 +158,9 @@ export default function Home() {
             {steps.map((step, i) => (
               <div key={step.number} className="relative text-center">
                 {i < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-12 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-brand-200 to-transparent" />
+                  <div className="hidden md:block absolute top-12 left-[60%] w-[80%] h-0.5 bg-linear-to-r from-brand-200 to-transparent" />
                 )}
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-brand-50 to-brand-100 rounded-2xl flex items-center justify-center mb-5 relative">
+                <div className="w-20 h-20 mx-auto bg-linear-to-br from-brand-50 to-brand-100 rounded-2xl flex items-center justify-center mb-5 relative">
                   <step.icon className="w-8 h-8 text-brand-600" />
                   <span className="absolute -top-2 -right-2 w-7 h-7 bg-brand-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm">
                     {step.number}
@@ -234,7 +234,7 @@ export default function Home() {
       )}
 
       {/* ── Benefits ──────────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-charcoal to-gray-900 text-white">
+      <section className="bg-linear-to-br from-charcoal to-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-12">
             <h2 className="font-display text-2xl sm:text-3xl font-bold">Why Use Smart Ordering?</h2>
@@ -257,7 +257,7 @@ export default function Home() {
 
       {/* ── CTA Section ───────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="bg-gradient-to-br from-brand-500 to-brand-600 rounded-3xl p-8 sm:p-12 text-center text-white relative overflow-hidden">
+        <div className="bg-linear-to-br from-brand-500 to-brand-600 rounded-3xl p-8 sm:p-12 text-center text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.1),transparent_50%)]" />
           <div className="relative">
             <ChefHat className="w-12 h-12 mx-auto mb-4 opacity-80" />

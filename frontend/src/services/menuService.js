@@ -8,6 +8,24 @@
 import mockMenu from '../data/mockMenu';
 import { getStoredMenu, setStoredMenu } from './storageService';
 
+const LOCAL_IMAGE_FALLBACKS = {
+  '1606491956689-2ea866880049': '/food_images/remote-1631452180519-c014fe946bc7.jpg',
+  '1642821373181-203a252e43cf': '/food_images/remote-1565557623262-b51c2513a641.jpg',
+  '1668236543090-82eb5eadfeea': '/food_images/remote-1630383249896-424e482df921.jpg',
+};
+
+function toLocalImagePath(image) {
+  if (typeof image !== 'string' || !image.startsWith('http')) return image;
+  const match = image.match(/photo-([0-9]+-[a-z0-9]+)/);
+  if (!match) return image;
+  return LOCAL_IMAGE_FALLBACKS[match[1]] || `/food_images/remote-${match[1]}.jpg`;
+}
+
+function isLegacyImage(image) {
+  return typeof image === 'string'
+    && (image.startsWith('http') || image.includes('/food_images/remote-'));
+}
+
 /**
  * Initialize menu data. Uses stored data if available, otherwise loads mock data.
  * @returns {Array}
@@ -15,7 +33,18 @@ import { getStoredMenu, setStoredMenu } from './storageService';
 export function initializeMenu() {
   const stored = getStoredMenu();
   if (stored && Array.isArray(stored) && stored.length > 0) {
-    return stored;
+    const migrated = stored.map((item) => {
+      const defaultItem = mockMenu.find((menuItem) => menuItem.id === item.id);
+      const image = defaultItem && isLegacyImage(item.image)
+        ? defaultItem.image
+        : toLocalImagePath(item.image);
+
+      return { ...item, image };
+    });
+    if (migrated.some((item, index) => item.image !== stored[index].image)) {
+      setStoredMenu(migrated);
+    }
+    return migrated;
   }
   setStoredMenu(mockMenu);
   return [...mockMenu];

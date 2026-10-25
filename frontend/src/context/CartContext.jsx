@@ -1,13 +1,24 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getStoredCart, setStoredCart } from '../services/storageService';
+import { useMenu } from './MenuContext';
 
 const CartContext = createContext(null);
 
+function synchronizeCartWithMenu(storedCart, menu) {
+  return storedCart.map((cartItem) => {
+    const menuItem = menu.find((item) => item.id === cartItem.id);
+    return menuItem
+      ? { ...cartItem, name: menuItem.name, price: menuItem.price, image: menuItem.image }
+      : cartItem;
+  });
+}
+
 export function CartProvider({ children }) {
+  const { menu } = useMenu();
   const [cart, setCart] = useState(() => {
     const stored = getStoredCart();
-    return Array.isArray(stored) ? stored : [];
+    return Array.isArray(stored) ? synchronizeCartWithMenu(stored, menu) : [];
   });
 
   const [notification, setNotification] = useState(null);

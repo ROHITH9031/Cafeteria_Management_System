@@ -18,7 +18,7 @@ export default function Toast() {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-[100]">
+    <div className="fixed top-4 right-4 z-100">
       <div
         className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-sm ${
           bgColors[notification.type] || bgColors.success

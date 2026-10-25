@@ -47,11 +47,11 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-charcoal to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-charcoal to-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-brand-500 to-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-brand-500/20">
+          <div className="w-16 h-16 bg-linear-to-br from-brand-500 to-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-brand-500/20">
             <UtensilsCrossed className="w-8 h-8 text-white" />
           </div>
           <h1 className="font-display text-2xl font-bold text-white">Admin Login</h1>

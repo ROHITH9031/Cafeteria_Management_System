@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Trash2, Plus, Minus, ShoppingCart, ArrowRight, UtensilsCrossed,
   X, User, Hash, Phone, AlertCircle, CreditCard,
+  ShoppingBag, Utensils,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useOrders } from '../context/OrderContext';
@@ -10,6 +11,7 @@ import { useMenu } from '../context/MenuContext';
 import FoodImage from '../components/common/FoodImage';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import { formatCurrency } from '../utils/currency';
+import { ORDER_TYPES } from '../services/orderService';
 
 export default function Cart() {
   const { cart, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -19,7 +21,12 @@ export default function Cart() {
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
-  const [form, setForm] = useState({ customerName: '', studentId: '', contactInfo: '' });
+  const [form, setForm] = useState({
+    customerName: '',
+    studentId: '',
+    contactInfo: '',
+    orderType: ORDER_TYPES.DINE_IN,
+  });
   const [errors, setErrors] = useState({});
   const [showReview, setShowReview] = useState(false);
 
@@ -58,6 +65,7 @@ export default function Cart() {
       customerName: form.customerName.trim(),
       studentId: form.studentId.trim(),
       contactInfo: form.contactInfo.trim(),
+      orderType: form.orderType,
       items: validItems,
     });
 
@@ -131,7 +139,7 @@ export default function Cart() {
                 key={item.id}
                 className={`flex gap-4 p-4 bg-white rounded-2xl border border-gray-100 ${isUnavailable ? 'opacity-60 border-amber-200 bg-amber-50/50' : ''}`}
               >
-                <FoodImage src={item.image} alt={item.name} className="w-20 h-20 rounded-xl shrink-0" />
+                <FoodImage src={menuItem?.image || item.image} alt={item.name} className="w-20 h-20 rounded-xl shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
                     <div>
@@ -220,6 +228,7 @@ export default function Cart() {
                   <p><span className="text-charcoal-muted">Name:</span> <span className="font-medium">{form.customerName}</span></p>
                   {form.studentId && <p><span className="text-charcoal-muted">Student ID:</span> <span className="font-medium">{form.studentId}</span></p>}
                   {form.contactInfo && <p><span className="text-charcoal-muted">Contact:</span> <span className="font-medium">{form.contactInfo}</span></p>}
+                  <p><span className="text-charcoal-muted">Serving:</span> <span className="font-medium">{form.orderType}</span></p>
                 </div>
 
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
@@ -295,6 +304,45 @@ export default function Cart() {
                     className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
                   />
                 </div>
+
+                <fieldset>
+                  <legend className="flex items-center gap-1.5 text-sm font-medium text-charcoal mb-1.5">
+                    <Utensils className="w-3.5 h-3.5" />
+                    How would you like your order?
+                  </legend>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: ORDER_TYPES.DINE_IN, label: 'Dine-in', description: 'Enjoy it at the cafeteria', Icon: Utensils },
+                      { value: ORDER_TYPES.PARCEL, label: 'Parcel', description: 'Pack it to take away', Icon: ShoppingBag },
+                    ].map(({ value, label, description, Icon }) => {
+                      const selected = form.orderType === value;
+                      return (
+                        <label
+                          key={value}
+                          className={`cursor-pointer rounded-xl border p-3 transition-colors ${
+                            selected
+                              ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-500/15'
+                              : 'border-gray-200 hover:border-brand-200'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="orderType"
+                            value={value}
+                            checked={selected}
+                            onChange={(e) => setForm({ ...form, orderType: e.target.value })}
+                            className="sr-only"
+                          />
+                          <span className="flex items-center gap-2">
+                            <Icon className={`w-4 h-4 ${selected ? 'text-brand-600' : 'text-charcoal-muted'}`} />
+                            <span className="text-sm font-semibold text-charcoal">{label}</span>
+                          </span>
+                          <span className="block text-[11px] text-charcoal-muted mt-1">{description}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
 
                 <div className="flex gap-2 pt-2">
                   <button
