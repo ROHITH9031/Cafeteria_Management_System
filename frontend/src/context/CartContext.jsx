@@ -42,9 +42,15 @@ export function CartProvider({ children }) {
 
   const addToCart = useCallback((item) => {
     if (!item.available) return;
+    const existing = cart.find((ci) => ci.id === item.id);
+    if (existing && existing.quantity >= 50) {
+      showNotification(`Maximum 50 of ${item.name} allowed per order`, 'error');
+      return;
+    }
     setCart((prev) => {
-      const existing = prev.find((ci) => ci.id === item.id);
-      if (existing) {
+      const found = prev.find((ci) => ci.id === item.id);
+      if (found) {
+        if (found.quantity >= 50) return prev;
         return prev.map((ci) =>
           ci.id === item.id ? { ...ci, quantity: ci.quantity + 1 } : ci
         );
@@ -52,7 +58,7 @@ export function CartProvider({ children }) {
       return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, image: item.image }];
     });
     showNotification(`${item.name} added to cart`);
-  }, [showNotification]);
+  }, [cart, showNotification]);
 
   const removeFromCart = useCallback((itemId) => {
     setCart((prev) => prev.filter((ci) => ci.id !== itemId));
@@ -64,12 +70,16 @@ export function CartProvider({ children }) {
       setCart((prev) => prev.filter((ci) => ci.id !== itemId));
       return;
     }
+    if (newQuantity > 50) {
+      showNotification('Maximum limit of 50 items reached per item', 'error');
+      return;
+    }
     setCart((prev) =>
       prev.map((ci) =>
         ci.id === itemId ? { ...ci, quantity: newQuantity } : ci
       )
     );
-  }, []);
+  }, [showNotification]);
 
   const clearCart = useCallback(() => {
     setCart([]);

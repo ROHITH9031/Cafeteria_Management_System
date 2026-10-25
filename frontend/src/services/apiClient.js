@@ -6,13 +6,22 @@ function getApiBaseUrl() {
 const API_BASE_URL = getApiBaseUrl();
 
 export async function apiRequest(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+    });
+  } catch (networkError) {
+    console.error(`[API Network Error] ${path}:`, networkError);
+    throw new Error(
+      'Unable to connect to the cafeteria server. Please verify your connection or check if the server is running.',
+      { cause: networkError }
+    );
+  }
 
   let body;
   try {
@@ -22,7 +31,11 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(body?.message || `API request failed: ${response.status}`);
+    const errorMessage = body?.message || body?.error || `Request failed with status ${response.status}`;
+    const error = new Error(errorMessage);
+    error.status = response.status;
+    error.details = body?.errors;
+    throw error;
   }
 
   return body;

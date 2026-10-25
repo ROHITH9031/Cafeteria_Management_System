@@ -3,11 +3,13 @@
  * 
  * Defines order constants and local normalization helpers.
  * Orders are persisted through the backend API; localStorage is retained
- * only as a fallback for legacy browser data.
+ * for client-side persistence across page refreshes.
  */
 
 import { getStoredOrders, setStoredOrders } from './storageService';
 import { generateToken, generateOrderId } from '../utils/tokenGenerator';
+
+export { getStoredOrders, setStoredOrders };
 
 /** Valid order statuses */
 export const ORDER_STATUSES = {
@@ -45,7 +47,7 @@ export const STATUS_STEPS = [
 ];
 
 /**
- * Initialize legacy orders from localStorage until the API responds.
+ * Initialize orders from localStorage.
  * @returns {Array}
  */
 export function initializeOrders() {
@@ -93,10 +95,7 @@ export function getTodayOrders(orders) {
 }
 
 /**
- * Create a new order.
- * @param {Array} orders
- * @param {Object} orderData - { items, customerName, studentId, contactInfo, orderType }
- * @returns {{ updatedOrders: Array, newOrder: Object }}
+ * Create a new order (local fallback).
  */
 export function createOrder(orders, orderData) {
   const newOrder = {
@@ -127,11 +126,7 @@ export function createOrder(orders, orderData) {
 }
 
 /**
- * Update the status of an order.
- * @param {Array} orders
- * @param {string} orderId
- * @param {string} newStatus
- * @returns {Array} Updated orders
+ * Update the status of an order (local fallback).
  */
 export function updateOrderStatus(orders, orderId, newStatus) {
   const updated = orders.map((order) =>
@@ -145,9 +140,6 @@ export function updateOrderStatus(orders, orderId, newStatus) {
 
 /**
  * Cancel an order (only if Pending).
- * @param {Array} orders
- * @param {string} orderId
- * @returns {Array}
  */
 export function cancelOrder(orders, orderId) {
   return updateOrderStatus(orders, orderId, ORDER_STATUSES.CANCELLED);

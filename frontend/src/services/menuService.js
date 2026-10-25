@@ -1,12 +1,12 @@
 /**
  * Menu Service — SRKR Cafeteria
  * 
- * Abstracts menu data operations. Currently uses mock data + localStorage.
- * In production, these functions will call the backend API.
+ * Manages menu data operations with backend API integration and localStorage fallback.
  */
 
 import mockMenu from '../data/mockMenu';
 import { getStoredMenu, setStoredMenu } from './storageService';
+import { apiRequest, authHeaders } from './apiClient';
 
 const LOCAL_IMAGE_FALLBACKS = {
   '1606491956689-2ea866880049': '/food_images/remote-1631452180519-c014fe946bc7.jpg',
@@ -26,24 +26,39 @@ function isLegacyImage(image) {
     && (image.startsWith('http') || image.includes('/food_images/remote-'));
 }
 
+export function normalizeMenuItem(item) {
+  const id = item.itemId || item.id || item._id;
+  const defaultItem = mockMenu.find((menuItem) => menuItem.id === id);
+  const image = defaultItem && isLegacyImage(item.image)
+    ? defaultItem.image
+    : toLocalImagePath(item.image);
+
+  return {
+    id,
+    itemId: id,
+    name: item.name,
+    description: item.description,
+    price: item.price,
+    category: item.category,
+    image,
+    available: item.available !== false,
+    popular: Boolean(item.popular),
+    featured: Boolean(item.featured),
+    preparationTime: item.preparationTime || 10,
+    stock: Number.isFinite(item.stock) ? item.stock : 25,
+    dietaryTags: Array.isArray(item.dietaryTags) ? item.dietaryTags : [],
+  };
+}
+
 /**
- * Initialize menu data. Uses stored data if available, otherwise loads mock data.
+ * Initialize menu data from localStorage or mockMenu.
  * @returns {Array}
  */
 export function initializeMenu() {
   const stored = getStoredMenu();
   if (stored && Array.isArray(stored) && stored.length > 0) {
-    const migrated = stored.map((item) => {
-      const defaultItem = mockMenu.find((menuItem) => menuItem.id === item.id);
-      const image = defaultItem && isLegacyImage(item.image)
-        ? defaultItem.image
-        : toLocalImagePath(item.image);
-
-      return { ...item, image };
-    });
-    if (migrated.some((item, index) => item.image !== stored[index].image)) {
-      setStoredMenu(migrated);
-    }
+    const migrated = stored.map(normalizeMenuItem);
+    setStoredMenu(migrated);
     return migrated;
   }
   setStoredMenu(mockMenu);
@@ -51,72 +66,68 @@ export function initializeMenu() {
 }
 
 /**
- * Get all menu items.
- * @param {Array} menu - Current menu state
- * @returns {Array}
+ * Fetch menu items from API with fallback to stored/mock data.
+ * @returns {Promise<Array>}
  */
-export function getMenuItems(menu) {
-  return menu || [];
+export async function fetchMenuItems() {
+  try {
+    const data = await apiRequest('/menu');
+    if (Array.isArray(data?.items)) {
+      const normalized = data.items.map(normalizeMenuItem);
+      setStoredMenu(normalized);
+      return normalized;
+    }
+  } catch (error) {
+    console.warn('[menuService] Failed to fetch menu from API, using cached data:', error);
+  }
+  return initializeMenu();
 }
 
 /**
- * Get a single menu item by ID.
- * @param {Array} menu
- * @param {string} id
- * @returns {Object|undefined}
+ * Create a new menu item via backend API (or fallback).
  */
-export function getMenuItemById(menu, id) {
-  return menu.find((item) => item.id === id);
-}
-
-/**
- * Create a new menu item.
- * @param {Array} menu
- * @param {Object} itemData
- * @returns {Array} Updated menu
- */
-export function createMenuItem(menu, itemData) {
-  const newItem = {
-    ...itemData,
-    id: `custom-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-  };
-  const updated = [...menu, newItem];
+export async function createMenuItem(menu, itemData) {
+  const data = await apiRequest('/menu', {
+    method: 'POST', headers: authHeaders(), body: JSON.stringify(itemData),
+  });
+  if (!data?.item) throw new Error('The server did not return the created menu item.');
+  const newItem = normalizeMenuItem(data.item);
+  const updated = [...menu.filter((item) => item.id !== newItem.id), newItem];
   setStoredMenu(updated);
   return updated;
 }
 
 /**
- * Update an existing menu item.
- * @param {Array} menu
- * @param {string} itemId
- * @param {Object} itemData
- * @returns {Array} Updated menu
+ * Update a menu item via backend API (or fallback).
  */
-export function updateMenuItem(menu, itemId, itemData) {
-  const updated = menu.map((item) =>
-    item.id === itemId ? { ...item, ...itemData } : item
-  );
+export async function updateMenuItem(menu, itemId, itemData) {
+  const data = await apiRequest(`/menu/${itemId}`, {
+    method: 'PATCH', headers: authHeaders(), body: JSON.stringify(itemData),
+  });
+  if (!data?.item) throw new Error('The server did not return the updated menu item.');
+  const updatedItem = normalizeMenuItem(data.item);
+  const updated = menu.map((item) => (item.id === itemId ? updatedItem : item));
   setStoredMenu(updated);
   return updated;
 }
 
 /**
- * Delete a menu item.
- * @param {Array} menu
- * @param {string} itemId
- * @returns {Array} Updated menu
+ * Delete a menu item via backend API (or fallback).
  */
-export function deleteMenuItem(menu, itemId) {
+export async function deleteMenuItem(menu, itemId) {
+  await apiRequest(`/menu/${itemId}`, { method: 'DELETE', headers: authHeaders() });
   const updated = menu.filter((item) => item.id !== itemId);
   setStoredMenu(updated);
   return updated;
 }
 
 /**
- * Reset menu to default mock data.
- * @returns {Array}
+ * Reset menu to default catalog via backend API (or fallback).
  */
-export function resetMenuToDefault() {
-  setStoredMenu(mockMenu);
-  return [...mockMenu];
+export async function resetMenuToDefault() {
+  const data = await apiRequest('/menu/reset', { method: 'POST', headers: authHeaders() });
+  if (!Array.isArray(data?.items)) throw new Error('The server did not return the reset menu.');
+  const normalized = data.items.map(normalizeMenuItem);
+  setStoredMenu(normalized);
+  return normalized;
 }
