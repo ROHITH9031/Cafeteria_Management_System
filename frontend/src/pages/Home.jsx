@@ -19,6 +19,7 @@ export default function Home() {
   const { menu } = useMenu();
 
   const featuredItems = menu.filter((item) => item.featured && item.available).slice(0, 4);
+  const heroItem = featuredItems[0] || menu.find((item) => item.available);
   const categories = [
     { name: 'Tiffins', icon: '🥞', count: menu.filter((i) => i.category === 'Tiffins').length, color: 'from-amber-400 to-orange-500' },
     { name: 'Fast Food', icon: '🍜', count: menu.filter((i) => i.category === 'Fast Food').length, color: 'from-red-400 to-rose-500' },
@@ -42,66 +43,82 @@ export default function Home() {
   return (
     <div>
       {/* ── Hero Section ──────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-50 via-white to-amber-50">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.08),transparent_50%)]" />
-        <div className="absolute top-20 -left-20 w-72 h-72 bg-brand-200/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-56 h-56 bg-amber-200/20 rounded-full blur-3xl" />
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-100 text-brand-700 rounded-full text-xs font-semibold mb-6 tracking-wide">
-              <Zap className="w-3.5 h-3.5" />
-              SRKR ENGINEERING COLLEGE
-            </div>
-
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold text-charcoal leading-tight">
-              Skip the Queue,{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-amber-500">
-                Order Smart
-              </span>
-            </h1>
-
-            <p className="mt-5 text-lg sm:text-xl text-charcoal-muted leading-relaxed max-w-lg">
-              Order your favourite food online, get a unique token, and collect your meal without waiting in line. The smart way to eat at SRKR Cafeteria.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 mt-8">
-              <Link
-                to="/menu"
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold rounded-2xl shadow-lg shadow-brand-500/25 hover:shadow-xl hover:shadow-brand-500/30 hover:-translate-y-0.5 transition-all text-sm"
-              >
-                <UtensilsCrossed className="w-4.5 h-4.5" />
-                Order Food
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/orders"
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white text-charcoal font-semibold rounded-2xl border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm"
-              >
-                <ClipboardList className="w-4.5 h-4.5" />
-                Track My Order
-              </Link>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="flex items-center gap-6 mt-10">
-              <div>
-                <p className="text-2xl font-bold text-charcoal font-display">{menu.length}+</p>
-                <p className="text-xs text-charcoal-muted">Menu Items</p>
+      <section className="relative overflow-hidden bg-[#fff8f1]">
+        <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-200/30 blur-3xl" />
+        <div className="absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-amber-200/30 blur-3xl" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20">
+          <div className="grid lg:grid-cols-[1.05fr_0.95fr] items-center gap-10 lg:gap-16">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-3.5 py-2 text-xs font-bold tracking-wide text-brand-700 shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                OPEN NOW · SRKR ENGINEERING COLLEGE
               </div>
-              <div className="w-px h-8 bg-gray-200" />
-              <div>
-                <p className="text-2xl font-bold text-charcoal font-display">₹10</p>
-                <p className="text-xs text-charcoal-muted">Starting From</p>
+              <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-charcoal sm:text-6xl lg:text-7xl">
+                Your break.
+                <span className="block text-brand-500">Your food.</span>
+                <span className="block">Your token.</span>
+              </h1>
+              <p className="mt-6 max-w-xl text-base leading-7 text-charcoal-muted sm:text-lg">
+                Skip the lunch queue. Order fresh cafeteria favourites from your classroom, get a live token, and collect when it is ready.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link to="/menu" className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-500 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-500/25 transition hover:-translate-y-0.5 hover:bg-brand-600">
+                  <UtensilsCrossed className="h-4 w-4" />
+                  Start an order
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link to="/orders" className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3.5 text-sm font-bold text-charcoal transition hover:border-brand-200 hover:text-brand-600">
+                  <ClipboardList className="h-4 w-4" />
+                  Track an order
+                </Link>
               </div>
-              <div className="w-px h-8 bg-gray-200" />
-              <div className="flex items-center gap-1">
-                <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                <p className="text-2xl font-bold text-charcoal font-display">4.8</p>
-                <p className="text-xs text-charcoal-muted ml-1">Rating</p>
+              <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-3 text-sm text-charcoal-muted">
+                <span><strong className="font-display text-xl text-charcoal">{menu.length}+</strong> menu items</span>
+                <span className="hidden h-6 w-px bg-gray-300 sm:block" />
+                <span><strong className="font-display text-xl text-charcoal">₹20</strong> from</span>
+                <span className="hidden h-6 w-px bg-gray-300 sm:block" />
+                <span className="inline-flex items-center gap-1"><Star className="h-4 w-4 fill-amber-400 text-amber-400" /><strong className="text-charcoal">4.8</strong> student rating</span>
+              </div>
+            </div>
+            <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+              <div className="absolute -inset-4 rounded-[2rem] bg-brand-500/10 blur-2xl" />
+              {heroItem && (
+                <div className="relative overflow-hidden rounded-[2rem] border-8 border-white bg-white shadow-2xl shadow-brand-900/10">
+                  <FoodImage src={heroItem.image} alt={heroItem.name} className="h-72 w-full sm:h-96" />
+                  <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-brand-700 backdrop-blur">
+                    Today’s pick
+                  </div>
+                  <div className="flex items-end justify-between gap-4 p-5">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">{heroItem.category}</p>
+                      <h2 className="mt-1 font-display text-2xl font-bold text-charcoal">{heroItem.name}</h2>
+                      <p className="mt-1 text-sm text-charcoal-muted">Freshly prepared · {heroItem.preparationTime} min</p>
+                    </div>
+                    <span className="font-display text-2xl font-bold text-brand-600">{formatCurrency(heroItem.price)}</span>
+                  </div>
+                </div>
+              )}
+              <div className="absolute -bottom-5 -left-3 flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-xl sm:left-[-1.5rem]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><PackageCheck className="h-5 w-5" /></div>
+                <div><p className="text-xs font-bold text-charcoal">Token-based pickup</p><p className="text-[11px] text-charcoal-muted">No counter queue</p></div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="border-b border-gray-100 bg-white">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 divide-y divide-gray-100 px-4 py-5 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-6 lg:px-8">
+          {[
+            { icon: UtensilsCrossed, title: 'Pick your favourites', desc: 'Browse the live menu' },
+            { icon: ClipboardList, title: 'Get a smart token', desc: 'Review before you pay' },
+            { icon: PackageCheck, title: 'Collect with ease', desc: 'Come when it is ready' },
+          ].map((item) => (
+            <div key={item.title} className="flex items-center gap-3 px-4 py-3 sm:justify-center">
+              <item.icon className="h-5 w-5 text-brand-500" />
+              <div><p className="text-sm font-bold text-charcoal">{item.title}</p><p className="text-xs text-charcoal-muted">{item.desc}</p></div>
+            </div>
+          ))}
         </div>
       </section>
 

@@ -29,6 +29,8 @@
 /* Custom utilities kept standard-CSS compatible for editor validation. */
 .font-sans { font-family: var(--font-sans); }
 .font-display { font-family: var(--font-display); }
+.bg-gradient-to-br { background-image: linear-gradient(to bottom right, var(--tw-gradient-stops)); }
+.bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
 .bg-brand-50 { background-color: var(--color-brand-50); }
 .bg-brand-100 { background-color: var(--color-brand-100); }
 .bg-brand-500 { background-color: var(--color-brand-500); }
@@ -47,12 +49,12 @@
 .border-brand-100 { border-color: var(--color-brand-100); }
 .border-brand-200 { border-color: var(--color-brand-200); }
 .border-brand-400 { border-color: var(--color-brand-400); }
-.from-brand-50 { --tw-gradient-from: var(--color-brand-50); }
-.from-brand-200 { --tw-gradient-from: var(--color-brand-200); }
-.from-brand-500 { --tw-gradient-from: var(--color-brand-500); }
-.from-charcoal { --tw-gradient-from: var(--color-charcoal); }
-.to-brand-100 { --tw-gradient-to: var(--color-brand-100); }
-.to-brand-600 { --tw-gradient-to: var(--color-brand-600); }
+.from-brand-50 { --tw-gradient-from: var(--color-brand-50); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(255 247 237 / 0)); }
+.from-brand-200 { --tw-gradient-from: var(--color-brand-200); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(254 215 170 / 0)); }
+.from-brand-500 { --tw-gradient-from: var(--color-brand-500); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(249 115 22 / 0)); }
+.from-charcoal { --tw-gradient-from: var(--color-charcoal); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(17 24 39 / 0)); }
+.to-brand-100 { --tw-gradient-to: var(--color-brand-100); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.to-brand-600 { --tw-gradient-to: var(--color-brand-600); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
 .ring-brand-500\/20 { --tw-ring-color: rgb(249 115 22 / 0.2); }
 .shadow-brand-500\/20 { --tw-shadow-color: rgb(249 115 22 / 0.2); }
 .shadow-brand-500\/25 { --tw-shadow-color: rgb(249 115 22 / 0.25); }
