@@ -38,6 +38,10 @@ app.get('/api/health', (req, res) => {
 });
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
+// Keep older deployed frontend bundles functional while they are redeployed.
+app.use('/auth', authRoutes);
+app.use('/menu', menuRoutes);
+app.use('/orders', orderRoutes);
 app.use(notFound);
 app.use(errorHandler);
 

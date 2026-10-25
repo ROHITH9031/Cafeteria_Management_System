@@ -38,6 +38,8 @@ VITE_API_URL=https://cafeteria-management-system-yz9e.onrender.com/api
 ```
 
 The `/api` suffix is required, and the URL must not end with an extra slash.
+The backend also temporarily accepts the legacy `/auth`, `/menu`, and `/orders`
+paths so an older frontend deployment can continue working during redeployment.
 
 Start MongoDB, then seed the menu and admin account:
 
